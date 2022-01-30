@@ -12,17 +12,16 @@
 <script src="react/react-dom.js"></script>
 <script src="react/babel.min.js"></script>
 <script type="text/babel">
-    class MyComponent extends React.Component {
-        render() {
-            return <span>Hello, my name is {this.props.name}</span>
-        }
+    const FunctionPropertyComponent = function ({name, job}) {
+        return <span>Hello, my name is {name}, the {job}</span>
     }
-    const FunctionPropertyComponent = function (props) {
-        return <span>Hello, my name is {props.name}</span>
+
+    FunctionPropertyComponent.defaultProps = {
+        job: 'engineer'
     }
 
     ReactDOM.render(
-        <MyComponent name="Bob"/>,
+        <FunctionPropertyComponent name="Bob" /*job="builder"*//>,
         document.getElementById('app')
     );
 </script>
