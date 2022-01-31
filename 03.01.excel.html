@@ -12,6 +12,10 @@
 <script src="react/react-dom.js"></script>
 <script src="react/babel.min.js"></script>
 <script type="text/babel">
+    function clone(obj) {
+        return JSON.parse(JSON.stringify(obj))
+    }
+
     const headers = ['Book', 'Author', 'Language', 'Published', 'Sales'];
 
     const data = [
@@ -44,12 +48,29 @@
     class Excel extends React.Component {
         constructor(props) {
             super();
-            this.state = {data: props.initialData}
+            this.state = {
+                data: props.initialData,
+                sortBy: null,
+                descending: false
+            }
             this.sort = this.sort.bind(this)
         }
 
-        sort(e) {
-            console.log('sorting!')
+        sort(event) {
+            const column = event.target.cellIndex
+            const data = clone(this.state.data)
+            const descending = this.state.sortBy === column && !this.state.descending
+            data.sort((a, b) => {
+                if (a[column] === b[column]) return 0
+                const sort = a[column] > b[column] ? 1 : -1
+                const multiplier = descending ? -1 : 1
+                return sort * multiplier
+            })
+            this.setState({
+                data: data,
+                sortBy: column,
+                descending: descending
+            })
         }
 
         render() {
@@ -60,7 +81,12 @@
             return (
                 <table>
                     <thead onClick={this.sort}>
-                    <tr>{this.props.headers.map((title, idx) => <th key={idx}>{title}</th>)}</tr>
+                    <tr>{this.props.headers.map((title, idx) => {
+                        if (this.state.sortBy === idx)
+                            title += this.state.descending ? ' \u2191' : ' \u2193'
+                        return <th key={idx}>{title}</th>
+                    })}
+                    </tr>
                     </thead>
                     <tbody>
                     {this.state.data.map((row, index) =>
@@ -77,7 +103,7 @@
     }
 
     ReactDOM.render(
-        <Excel headers={headers} initialData={data} />,
+        <Excel headers={headers} initialData={data}/>,
         document.getElementById('app')
     );
 </script>
