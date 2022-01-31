@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello React</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<div id="app">
+    <!-- my app renders here -->
+</div>
+<script src="react/react.js"></script>
+<script src="react/react-dom.js"></script>
+<script src="react/babel.min.js"></script>
+<script type="text/babel">
+    const TextAreaCounter = function ({defaultText}) {
+        const [stateValue, setStateValue] = React.useState(defaultText);
+        React.useEffect(() => console.log('Rendered!'))
+        React.useEffect(() => console.log('Rendered once!'), [])
+        return (
+            <div>
+                <textarea
+                    value={stateValue}
+                    onChange={event => setStateValue(event.target.value)}/>
+                <h3>{stateValue.length}</h3>
+            </div>
+        );
+    }
+
+    TextAreaCounter.defaultProps = {
+        defaultText: 'Count me as I type'
+    }
+
+    const counter = ReactDOM.render(
+        <TextAreaCounter defaultText="Bob" /*job="builder"*//>,
+        document.getElementById('app')
+    );
+</script>
+</body>
+</html>
