@@ -63,6 +63,7 @@
             this.search = this.search.bind(this)
 
             this.preSearchData = null
+            this.needles = headers.map(() => '')
         }
 
         sort(event) {
@@ -104,17 +105,17 @@
                     search: newSearch
                 })
             }
+            this.needles = this.needles.map(() => '')
         }
 
         search(event) {
-            const needle = event.target.value.toLowerCase()
-            if (!needle) {
-                this.setState({data: this.preSearchData})
-                return
-            }
             const idx = event.target.dataset.idx
+            this.needles[idx] = event.target.value.toLowerCase()
             const searchData = this.preSearchData.filter((row) => {
-                return row[idx].toString().toLowerCase().indexOf(needle) > -1
+                return row.every((element, index) => {
+                    if (!this.needles[index]) return true
+                    return element.toString().toLowerCase().indexOf(this.needles[index]) > -1
+                })
             })
             this.setState({data: searchData})
         }
