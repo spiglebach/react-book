@@ -122,12 +122,19 @@
         save(event) {
             event.preventDefault()
             const input = event.target.firstChild
-            const data = clone(this.state.data)
-            data[this.state.edit.row][this.state.edit.column] = input.value
+            const data = clone(this.state.data).map(row => {
+                if (row[row.length - 1] === this.state.edit.row) {
+                    row[this.state.edit.column] = input.value
+                }
+                return row
+            })
             this.setState({
                 edit: null,
                 data
             })
+            if (this.preSearchData) {
+                this.preSearchData[this.state.edit.row][this.state.edit.column] = input.value
+            }
         }
 
         render() {
