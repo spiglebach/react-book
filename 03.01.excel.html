@@ -48,15 +48,21 @@
     class Excel extends React.Component {
         constructor(props) {
             super();
+            const data = clone(props.initialData).map((row, idx) => row.concat(idx))
             this.state = {
-                data: props.initialData,
+                data,
                 sortBy: null,
                 descending: false,
-                sort: null // {row: index, column: index}
+                edit: null, // {row: index, column: index}
+                search: false
             }
             this.sort = this.sort.bind(this)
             this.showEditor = this.showEditor.bind(this)
             this.save = this.save.bind(this)
+            this.toggleSearch = this.toggleSearch.bind(this)
+            this.search = this.search.bind(this)
+
+            this.preSearchData = null
         }
 
         sort(event) {
@@ -85,6 +91,34 @@
             })
         }
 
+        toggleSearch() {
+            const newSearch = !this.state.search
+            if (newSearch) {
+                this.preSearchData = this.state.data
+                this.setState({
+                    search: newSearch
+                })
+            } else {
+                this.setState({
+                    data: this.preSearchData,
+                    search: newSearch
+                })
+            }
+        }
+
+        search(event) {
+            const needle = event.target.value.toLowerCase()
+            if (!needle) {
+                this.setState({data: this.preSearchData})
+                return
+            }
+            const idx = event.target.dataset.idx
+            const searchData = this.preSearchData.filter((row) => {
+                return row[idx].toString().toLowerCase().indexOf(needle) > -1
+            })
+            this.setState({data: searchData})
+        }
+
         save(event) {
             event.preventDefault()
             const input = event.target.firstChild
@@ -101,7 +135,20 @@
             // for (const title of this.props.headers) {
             //     headers.push(<th>{title}</th>)
             // }
+            const searchRow = !this.state.search ? null : (
+                <tr onChange={this.search}>
+                    {this.props.headers.map((_, idx) => (
+                        <td key={idx}>
+                            <input type="text" data-idx={idx}/>
+                        </td>
+                    ))}
+                </tr>
+            )
             return (
+                <div>
+                    <button className="toolbar" onClick={this.toggleSearch}>
+                        {this.state.search ? 'Hide search' : 'Show search'}
+                    </button>
                 <table>
                     <thead onClick={this.sort}>
                     <tr>{this.props.headers.map((title, idx) => {
@@ -112,23 +159,30 @@
                     </tr>
                     </thead>
                     <tbody onDoubleClick={this.showEditor}>
-                    {this.state.data.map((row, rowidx) =>
-                        <tr key={rowidx} data-row={rowidx}>
+                    {searchRow}
+                    {this.state.data.map((row, rowidx) => {
+                        const recordId = row[row.length - 1]
+                        return (<tr key={rowidx} data-row={recordId}>
                             {row.map((cell, columnidx) => {
+                                if (columnidx === this.props.headers.length) {
+                                    // do not show the record ID in the table UI
+                                    return
+                                }
                                 const edit = this.state.edit
                                 if (edit && edit.row === rowidx && edit.column === columnidx) {
                                     cell = (
                                         <form onSubmit={this.save}>
-                                            <input type="text" defaultValue={cell} />
+                                            <input type="text" defaultValue={cell}/>
                                         </form>
                                     )
                                 }
                                 return <td key={columnidx}>{cell}</td>
                             })}
-                        </tr>
-                    )}
+                        </tr>)
+                    })}
                     </tbody>
                 </table>
+                </div>
             )
         }
     }
