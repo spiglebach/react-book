@@ -51,9 +51,12 @@
             this.state = {
                 data: props.initialData,
                 sortBy: null,
-                descending: false
+                descending: false,
+                sort: null // {row: index, column: index}
             }
             this.sort = this.sort.bind(this)
+            this.showEditor = this.showEditor.bind(this)
+            this.save = this.save.bind(this)
         }
 
         sort(event) {
@@ -73,6 +76,26 @@
             })
         }
 
+        showEditor(event) {
+            this.setState({
+                edit: {
+                    row: parseInt(event.target.parentNode.dataset.row, 10),
+                    column: event.target.cellIndex
+                }
+            })
+        }
+
+        save(event) {
+            event.preventDefault()
+            const input = event.target.firstChild
+            const data = clone(this.state.data)
+            data[this.state.edit.row][this.state.edit.column] = input.value
+            this.setState({
+                edit: null,
+                data
+            })
+        }
+
         render() {
             const headers = [];
             // for (const title of this.props.headers) {
@@ -88,12 +111,20 @@
                     })}
                     </tr>
                     </thead>
-                    <tbody>
-                    {this.state.data.map((row, index) =>
-                        <tr key={index}>
-                            {row.map((cell, index) =>
-                                <td key={index}>{cell}</td>
-                            )}
+                    <tbody onDoubleClick={this.showEditor}>
+                    {this.state.data.map((row, rowidx) =>
+                        <tr key={rowidx} data-row={rowidx}>
+                            {row.map((cell, columnidx) => {
+                                const edit = this.state.edit
+                                if (edit && edit.row === rowidx && edit.column === columnidx) {
+                                    cell = (
+                                        <form onSubmit={this.save}>
+                                            <input type="text" defaultValue={cell} />
+                                        </form>
+                                    )
+                                }
+                                return <td key={columnidx}>{cell}</td>
+                            })}
                         </tr>
                     )}
                     </tbody>
