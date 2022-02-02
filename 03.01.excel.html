@@ -199,7 +199,7 @@
                                     return
                                 }
                                 const edit = this.state.edit
-                                if (edit && edit.row === rowidx && edit.column === columnidx) {
+                                if (edit && edit.row === recordId && edit.column === columnidx) {
                                     cell = (
                                         <form onSubmit={this.save}>
                                             <input type="text" defaultValue={cell}/>
