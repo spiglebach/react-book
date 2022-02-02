@@ -61,9 +61,31 @@
             this.save = this.save.bind(this)
             this.toggleSearch = this.toggleSearch.bind(this)
             this.search = this.search.bind(this)
+            this.replay = this.replay.bind(this)
+            this.logSetState = this.logSetState.bind(this)
 
+            this.log = [clone(this.state)]
             this.preSearchData = null
             this.needles = headers.map(() => '')
+        }
+
+        logSetState(newState) {
+            this.log.push(this.state)
+            this.setState(newState)
+        }
+
+        replay() {
+            if (this.log.length === 1) {
+                console.warn('No state changes to replay yet')
+                return
+            }
+            let idx = -1
+            const interval = setInterval(() => {
+                if (++idx === this.log.length - 1) {
+                    clearInterval(interval)
+                }
+                this.setState(this.log[idx])
+            }, 1000)
         }
 
         sort(event) {
@@ -76,7 +98,7 @@
                 const multiplier = descending ? -1 : 1
                 return sort * multiplier
             })
-            this.setState({
+            this.logSetState({
                 data: data,
                 sortBy: column,
                 descending: descending
@@ -84,7 +106,7 @@
         }
 
         showEditor(event) {
-            this.setState({
+            this.logSetState({
                 edit: {
                     row: parseInt(event.target.parentNode.dataset.row, 10),
                     column: event.target.cellIndex
@@ -96,11 +118,11 @@
             const newSearch = !this.state.search
             if (newSearch) {
                 this.preSearchData = this.state.data
-                this.setState({
+                this.logSetState({
                     search: newSearch
                 })
             } else {
-                this.setState({
+                this.logSetState({
                     data: this.preSearchData,
                     search: newSearch
                 })
@@ -117,7 +139,7 @@
                     return element.toString().toLowerCase().indexOf(this.needles[index]) > -1
                 })
             })
-            this.setState({data: searchData})
+            this.logSetState({data: searchData})
         }
 
         save(event) {
@@ -129,7 +151,7 @@
                 }
                 return row
             })
-            this.setState({
+            this.logSetState({
                 edit: null,
                 data
             })
@@ -192,6 +214,15 @@
                 </table>
                 </div>
             )
+        }
+
+        componentDidMount() {
+            document.addEventListener('keydown', e => {
+                if (e.altKey && e.shiftKey && e.keyCode === 82) {
+                    // ALT + SHIFT + R (replay)
+                    this.replay()
+                }
+            })
         }
     }
 
