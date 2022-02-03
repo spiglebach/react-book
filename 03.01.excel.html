@@ -48,9 +48,8 @@
     class Excel extends React.Component {
         constructor(props) {
             super();
-            const data = clone(props.initialData).map((row, idx) => row.concat(idx))
             this.state = {
-                data,
+                data: props.initialData,
                 sortBy: null,
                 descending: false,
                 edit: null, // {row: index, column: index}
@@ -208,39 +207,49 @@
                     <a href="data.csv" onClick={this.downloadCSV}>
                         Export CSV
                     </a>
-                <table>
-                    <thead onClick={this.sort}>
-                    <tr>{this.props.headers.map((title, idx) => {
-                        if (this.state.sortBy === idx)
-                            title += this.state.descending ? ' \u2191' : ' \u2193'
-                        return <th key={idx}>{title}</th>
-                    })}
-                    </tr>
-                    </thead>
-                    <tbody onDoubleClick={this.showEditor}>
-                    {searchRow}
-                    {this.state.data.map((row, rowidx) => {
-                        const recordId = row[row.length - 1]
-                        return (<tr key={rowidx} data-row={recordId}>
-                            {row.map((cell, columnidx) => {
-                                if (columnidx === this.props.headers.length) {
-                                    // do not show the record ID in the table UI
-                                    return
-                                }
-                                const edit = this.state.edit
-                                if (edit && edit.row === recordId && edit.column === columnidx) {
-                                    cell = (
-                                        <form onSubmit={this.save}>
-                                            <input type="text" defaultValue={cell}/>
-                                        </form>
-                                    )
-                                }
-                                return <td key={columnidx}>{cell}</td>
+                    <table>
+                        <thead onClick={this.sort}>
+                        <tr>{this.props.headers.map((title, idx) => {
+                            if (this.state.sortBy === idx)
+                                title += this.state.descending ? ' \u2191' : ' \u2193'
+                            return <th key={idx}>{title}</th>
+                        })}
+                        </tr>
+                        </thead>
+                        {this.state.data.length === 0 ? (
+                            <tbody>
+                            <tr>
+                                <td colSpan={this.props.headers.length}>
+                                    Loading data...
+                                </td>
+                            </tr>
+                            </tbody>
+                        ) : (
+                            <tbody onDoubleClick={this.showEditor}>
+                            {searchRow}
+                            {this.state.data.map((row, rowidx) => {
+                                const recordId = row[row.length - 1]
+                                return (<tr key={rowidx} data-row={recordId}>
+                                    {row.map((cell, columnidx) => {
+                                        if (columnidx === this.props.headers.length) {
+                                            // do not show the record ID in the table UI
+                                            return
+                                        }
+                                        const edit = this.state.edit
+                                        if (edit && edit.row === recordId && edit.column === columnidx) {
+                                            cell = (
+                                                <form onSubmit={this.save}>
+                                                    <input type="text" defaultValue={cell}/>
+                                                </form>
+                                            )
+                                        }
+                                        return <td key={columnidx}>{cell}</td>
+                                    })}
+                                </tr>)
                             })}
-                        </tr>)
-                    })}
-                    </tbody>
-                </table>
+                            </tbody>
+                        )}
+                    </table>
                 </div>
             )
         }
@@ -254,6 +263,15 @@
 
         componentDidMount() {
             document.addEventListener('keydown', this.keydownHandler)
+            fetch('https://www.phpied.com/files/reactbook/table-data.json')
+                .then((response) => response.json())
+                .then((initialData) => {
+                    const data = clone(initialData).map((row, idx) => {
+                        row.push(idx);
+                        return row;
+                    });
+                    this.setState({data});
+                })
         }
 
         componentWillUnmount() {
@@ -263,7 +281,7 @@
     }
 
     ReactDOM.render(
-        <Excel headers={headers} initialData={data}/>,
+        <Excel headers={headers} initialData={[]}/>,
         document.getElementById('app')
     );
 </script>
