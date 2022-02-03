@@ -63,10 +63,12 @@
             this.search = this.search.bind(this)
             this.replay = this.replay.bind(this)
             this.logSetState = this.logSetState.bind(this)
+            this.keydownHandler = this.keydownHandler.bind(this)
 
             this.log = [clone(this.state)]
             this.preSearchData = null
             this.needles = headers.map(() => '')
+            this.replayId = null
         }
 
         logSetState(newState) {
@@ -80,9 +82,9 @@
                 return
             }
             let idx = -1
-            const interval = setInterval(() => {
+            this.replayId = setInterval(() => {
                 if (++idx === this.log.length - 1) {
-                    clearInterval(interval)
+                    clearInterval(this.replayId)
                 }
                 this.setState(this.log[idx])
             }, 1000)
@@ -216,13 +218,20 @@
             )
         }
 
+        keydownHandler(e) {
+            if (e.altKey && e.shiftKey && e.keyCode === 82) {
+                // ALT + SHIFT + R (replay)
+                this.replay()
+            }
+        }
+
         componentDidMount() {
-            document.addEventListener('keydown', e => {
-                if (e.altKey && e.shiftKey && e.keyCode === 82) {
-                    // ALT + SHIFT + R (replay)
-                    this.replay()
-                }
-            })
+            document.addEventListener('keydown', this.keydownHandler)
+        }
+
+        componentWillUnmount() {
+            document.removeEventListener('keydown', this.keydownHandler)
+            clearInterval(this.replayId)
         }
     }
 
