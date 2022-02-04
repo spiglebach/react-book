@@ -46,15 +46,74 @@
     ];
 
     const Excel = function ({headers, initialData}) {
-        const [data, setData] = React.useState(clone(initialData).map((row, idx) => row.concat(idx)))
-        const [sorting, setSorting] = React.useState({
+        const [data, setData] = useLoggedState(clone(initialData).map((row, idx) => row.concat(idx)), true)
+        const [sorting, setSorting] = useLoggedState({
             column: null,
             descending: false
         })
-        const [edit, setEdit] = React.useState(null)
-        const [isSearching, setSearch] = React.useState(false)
-        const [preSearchData, setPreSearchData] = React.useState(null)
-        const [needles, setNeedles] = React.useState(headers.map(() => ''))
+        const [edit, setEdit] = useLoggedState(null)
+        const [isSearching, setSearch] = useLoggedState(false)
+        const [preSearchData, setPreSearchData] = useLoggedState(null)
+        const [needles, setNeedles] = useLoggedState(headers.map(() => ''))
+        let dataLog = [];
+        let auxLog = [];
+        let isReplaying = false;
+        let replayID = null;
+
+        function useLoggedState(initialValue, isData) {
+            const [state, setState] = React.useState(initialValue)
+
+            React.useEffect(() => {
+                if (isReplaying) return
+                if (isData) {
+                    dataLog.push([clone(state), setState])
+                } else {
+                    const idx = dataLog.length - 1
+                    if (!auxLog[idx]) {
+                        auxLog[idx] = []
+                    }
+                    auxLog[idx].push([state, setState])
+                }
+            }, [state])
+
+            return [state, setState]
+        }
+
+        function replay() {
+            isReplaying = true;
+            let idx = 0;
+            replayID = setInterval(() => {
+                const [data, fn] = dataLog[idx];
+                fn(data);
+                auxLog[idx] &&
+                auxLog[idx].forEach((log) => {
+                    const [data, fn] = log;
+                    fn(data);
+                });
+                idx++;
+                if (idx > dataLog.length - 1) {
+                    isReplaying = false;
+                    clearInterval(replayID);
+                    return;
+                }
+            }, 1000);
+        }
+
+        React.useEffect(() => {
+            function keydownHandler(e) {
+                if (e.altKey && e.shiftKey && e.keyCode === 82) {
+                    // ALT+SHIFT+R(eplay)
+                    replay();
+                }
+            }
+            document.addEventListener('keydown', keydownHandler);
+            return () => {
+                document.removeEventListener('keydown', keydownHandler);
+                clearInterval(replayID);
+                dataLog = [];
+                auxLog = [];
+            };
+        }, []);
 
         function toggleSearch() {
             setNeedles(needles.map(() => ''))
