@@ -46,12 +46,38 @@
     ];
 
     const Excel = function ({headers, initialData}) {
-        const [data, setData] = React.useState(initialData)
+        const [data, setData] = React.useState(clone(initialData).map((row, idx) => row.concat(idx)))
         const [sorting, setSorting] = React.useState({
             column: null,
             descending: false
         })
         const [edit, setEdit] = React.useState(null)
+        const [isSearching, setSearch] = React.useState(false)
+        const [preSearchData, setPreSearchData] = React.useState(null)
+        const [needles, setNeedles] = React.useState(headers.map(() => ''))
+
+        function toggleSearch() {
+            setNeedles(needles.map(() => ''))
+            const newSearch = !isSearching
+            if (newSearch) {
+                setPreSearchData(data)
+            } else {
+                setData(preSearchData)
+            }
+            setSearch(newSearch)
+        }
+
+        function search(e) {
+            const idx = e.target.dataset.idx
+            needles[idx] = e.target.value.toLowerCase()
+            const searchData = preSearchData.filter((row) => {
+                return row.every((element, index) => {
+                    if (!needles[index]) return true
+                    return element.toString().toLowerCase().indexOf(needles[index]) > -1
+                })
+            })
+            setData(searchData)
+        }
 
         function sort(e) {
             const column = e.target.cellIndex
@@ -79,18 +105,35 @@
         function save(e) {
             e.preventDefault()
             const input = e.target.firstChild
-            const dataCopy = clone(data)
-            dataCopy[edit.row][edit.column] = input.value
+            const dataCopy = clone(data).map(row => {
+                if (row[row.length - 1] === edit.row) row[edit.column] = input.value
+                return row
+            })
             setEdit(null)
             setData(dataCopy)
+            let newPreSearchData = clone(preSearchData)
+            newPreSearchData[edit.row][edit.column] = input.value
+            setPreSearchData(newPreSearchData)
         }
 
         function clone(o) {
             return JSON.parse(JSON.stringify(o))
         }
 
+        const searchRow = !isSearching ? null : (
+            <tr onChange={search}>
+                {headers.map((_, idx) => (
+                    <td key={idx}>
+                        <input type="text" data-idx={idx}/>
+                    </td>
+                ))}
+            </tr>
+        )
         return (
             <div>
+                <div className="toolbar" onClick={toggleSearch}>
+                    <button>{isSearching ? 'Hide search' : 'Show search'}</button>
+                </div>
                 <table>
                     <thead onClick={sort}>
                     <tr>
@@ -101,20 +144,25 @@
                     </tr>
                     </thead>
                     <tbody onDoubleClick={showEditor}>
-                    {data.map((row, rowidx) => (
-                        <tr key={rowidx} data-row={rowidx}>
-                            {row.map((cell, columnidx) => {
-                                if (edit && edit.row === rowidx && edit.column === columnidx) {
-                                    cell = (
-                                        <form onSubmit={save}>
-                                            <input type="text" defaultValue={cell}/>
-                                        </form>
-                                    )
-                                }
-                                return <td key={columnidx}>{cell}</td>
-                            })}
-                        </tr>
-                    ))}
+                    {searchRow}
+                    {data.map((row, rowidx) => {
+                        const recordId = row[row.length - 1]
+                        return (
+                            <tr key={rowidx} data-row={recordId}>
+                                {row.map((cell, columnidx) => {
+                                    if (columnidx === headers.length) return
+                                    if (edit && edit.row === rowidx && edit.column === columnidx) {
+                                        cell = (
+                                            <form onSubmit={save}>
+                                                <input type="text" defaultValue={cell}/>
+                                            </form>
+                                        )
+                                    }
+                                    return <td key={columnidx}>{cell}</td>
+                                })}
+                            </tr>
+                        )
+                    })}
                     </tbody>
                 </table>
             </div>
