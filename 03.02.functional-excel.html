@@ -47,11 +47,39 @@
 
     const Excel = function ({headers, initialData}) {
         const [data, setData] = React.useState(initialData)
+        const [sorting, setSorting] = React.useState({
+            column: null,
+            descending: false
+        })
+
+        function sort(e) {
+            const column = e.target.cellIndex
+            const descending = sorting.column === column && !sorting.descending
+            const dataCopy = clone(data)
+            dataCopy.sort((a, b) => {
+                if (a[column] === b[column]) return 0
+                const sortValue = a[column] < b[column] ? 1 : -1
+                const sortDirectionMultiplier = descending ? 1 : -1
+                return sortValue * sortDirectionMultiplier
+            })
+            setData(dataCopy)
+            setSorting({column, descending})
+        }
+
+        function clone(o) {
+            return JSON.parse(JSON.stringify(o))
+        }
+
         return (
             <div>
                 <table>
-                    <thead>
-                    <tr>{headers.map((title, idx) => <th key={idx}>{title}</th>)}</tr>
+                    <thead onClick={sort}>
+                    <tr>
+                        {headers.map((title, idx) => {
+                            if (sorting.column === idx) title += sorting.descending ? ' \u2191' : ' \u2193'
+                            return <th key={idx}>{title}</th>
+                        })}
+                    </tr>
                     </thead>
                     <tbody>
                     {data.map((row, idx) => (
