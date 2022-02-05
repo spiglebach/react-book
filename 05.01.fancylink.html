@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hello React</title>
+    <meta charset="utf-8">
+</head>
+<body>
+<div id="app">
+    <!-- my app renders here -->
+</div>
+<script src="react/react.js"></script>
+<script src="react/react-dom.js"></script>
+<script src="react/babel.min.js"></script>
+<script type="text/babel">
+    function FancyLink(props) {
+        const {variant, ...attribs} = props
+        switch (variant) {
+            case 'small':
+                break
+            case 'medium':
+                break
+            default:
+        }
+
+        return (
+            <React.Fragment>
+                <h1>Hello</h1>
+                <a {...attribs}>
+                    {props.children}
+                </a>
+            </React.Fragment>
+        )
+    }
+
+    ReactDOM.render(
+        <FancyLink variant="small" href="https://www.google.com" target="_blank">
+            <span>Follow me!</span>
+        </FancyLink>,
+        document.getElementById('app')
+    );
+</script>
+</body>
+</html>
