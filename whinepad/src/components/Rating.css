@@ -1,0 +1,4 @@
+.Rating {cursor: pointer;}
+.Rating.RatingReadonly {cursor: auto;}
+.Rating span {filter: grayscale(0.9);}
+.Rating .RatingOn {filter: grayscale(0);}
