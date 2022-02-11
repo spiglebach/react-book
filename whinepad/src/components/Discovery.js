@@ -5,9 +5,12 @@ import Button from "./Button";
 import Suggest from "./Suggest";
 import Rating from "./Rating";
 import FormInput from "./FormInput";
+import {useRef} from "react";
+import Form from "./Form";
 
 
 const Discovery = () => {
+    const form = useRef()
     return (
         <div>
             <h2>Excel</h2>
@@ -85,6 +88,22 @@ const Discovery = () => {
                 </tr>
                 </tbody>
             </table>
+            <Form
+                ref={form}
+                fields={{
+                    rateme: {label: 'Rating', type: 'rating'},
+                    freetext: {label: 'Greetings'}
+                }}
+                initialData={{rateme: 4, freetext: 'Hello'}}
+                />
+            <Button
+                onClick={() => {
+                    const data = {}
+                    Array.from(form.current).forEach(
+                        (input) => (data[input.id] = input.value)
+                    )
+                    alert(JSON.stringify(data))
+                }}>Submit</Button>
         </div>
     )
 }
