@@ -7,6 +7,7 @@ import Rating from "./Rating";
 import FormInput from "./FormInput";
 import {useRef} from "react";
 import Form from "./Form";
+import Actions from "./Actions";
 
 
 const Discovery = () => {
@@ -104,6 +105,8 @@ const Discovery = () => {
                     )
                     alert(JSON.stringify(data))
                 }}>Submit</Button>
+            <br/>
+            <Actions onAction={(type) => alert(type)} />
         </div>
     )
 }
