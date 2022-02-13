@@ -9,6 +9,8 @@ import {useRef, useState} from "react";
 import Form from "./Form";
 import Actions from "./Actions";
 import Dialog from "./Dialog";
+import Header from "./Header";
+import schema from "../config/schema";
 
 
 const Discovery = () => {
@@ -52,12 +54,20 @@ const Discovery = () => {
         <div>
             <h2>Excel</h2>
             <Excel
-                headers={['Name', 'Year']}
-                initialData={[
-                    ['Charles', '1859'],
-                    ['Antoine', '1943']
-                ]}
-            />
+                schema={schema}
+                initialData={schema.name.samples.map((_, idx) => {
+                    const element = {}
+                    for (let key in schema) {
+                        element[key] = schema[key].samples[idx]
+                    }
+                    return element
+                })}
+                onDataChange={(data) => {
+                    console.log(data)
+                }}
+                />
+            <h2>Header</h2>
+            <Header />
             <h2>Logo</h2>
             <Logo/>
             <h2>Body</h2>
