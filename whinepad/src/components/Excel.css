@@ -1,3 +1,15 @@
 .Excel table {
     width: 100%;
 }
+
+.ExcelDataRight {
+    text-align: right;
+}
+
+.ExcelDataLeft {
+    text-align: left;
+}
+
+.ExcelDataCenter {
+    text-align: center;
+}

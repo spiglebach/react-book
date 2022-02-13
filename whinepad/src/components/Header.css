@@ -1,0 +1,14 @@
+.Header {
+    display: flex;
+    align-items: center;
+    background-color: bisque;
+    padding: 10px;
+}
+
+.push-right {
+    margin-left: auto;
+}
+
+.Header div:last-child {
+    margin: 0 20px 0 20px;
+}

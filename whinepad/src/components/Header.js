@@ -1,6 +1,7 @@
 import Logo from "./Logo";
 import FormInput from "./FormInput";
 import Button from "./Button";
+import "./Header.css"
 
 
 const Header = ({onSearch, onAdd, count = 0}) => {
@@ -8,7 +9,7 @@ const Header = ({onSearch, onAdd, count = 0}) => {
     return (
         <div className="Header">
             <Logo />
-            <div>
+            <div className="push-right">
                 <FormInput placeholder={placeholder} id="search" onChange={onSearch} />
             </div>
             <div>
