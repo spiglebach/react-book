@@ -11,6 +11,8 @@ import Actions from "./Actions";
 import Dialog from "./Dialog";
 import Header from "./Header";
 import schema from "../config/schema";
+import ExcelExample from "./ExcelExample";
+import DataContext from "../modules/DataContext";
 
 
 const Discovery = () => {
@@ -53,21 +55,11 @@ const Discovery = () => {
     return (
         <div>
             <h2>Excel</h2>
-            <Excel
-                schema={schema}
-                initialData={schema.name.samples.map((_, idx) => {
-                    const element = {}
-                    for (let key in schema) {
-                        element[key] = schema[key].samples[idx]
-                    }
-                    return element
-                })}
-                onDataChange={(data) => {
-                    console.log(data)
-                }}
-                />
+            <ExcelExample/>
             <h2>Header</h2>
-            <Header />
+            <DataContext.Provider value={{data: [1, 2, 3], updateData: () => {}}}>
+                <Header onSearch={(e) => console.log(e)}/>
+            </DataContext.Provider>
             <h2>Logo</h2>
             <Logo/>
             <h2>Body</h2>

@@ -1,4 +1,4 @@
-import React, {useReducer, useRef} from 'react'
+import React, {useContext, useReducer, useRef} from 'react'
 import {useState} from 'react'
 import clone from '../modules/clone'
 import './Excel.css'
@@ -7,9 +7,11 @@ import Actions from "./Actions";
 import Rating from "./Rating";
 import Dialog from "./Dialog";
 import Form from "./Form";
+import DataContext from "../modules/DataContext";
+import schema from "../config/schema";
 
-function Excel({schema, initialData, onDataChange, filter}) {
-    const [data, dispatch] = useReducer(reducer, initialData)
+function Excel({filter}) {
+    const {data, updateData} = useContext(DataContext)
     const [sorting, setSorting] = useState({
         column: '',
         descending: false
@@ -25,7 +27,7 @@ function Excel({schema, initialData, onDataChange, filter}) {
         }
         const descending = sorting.column === column && !sorting.descending
         setSorting({column, descending})
-        dispatch({type: 'sort', payload: {column, descending}})
+        updateData(dataMangler(data, 'sort', {column, descending}))
     }
 
     function showEditor(e) {
@@ -43,13 +45,11 @@ function Excel({schema, initialData, onDataChange, filter}) {
         e.preventDefault()
         const value = e.target.firstChild.value
         const valueType = schema[e.target.parentNode.dataset.schema].type
-        dispatch({
-            type: 'save',
-            payload: {
-                edit, value, onDataChange,
+        updateData(dataMangler(data, 'save', {
+                edit, value,
                 int: valueType === 'year' || valueType === 'rating'
             }
-        })
+        ))
         setEdit(null)
     }
 
@@ -63,10 +63,7 @@ function Excel({schema, initialData, onDataChange, filter}) {
                     onAction={(action) => {
                         setDialog(null)
                         if (action === 'confirm') {
-                            dispatch({
-                                type: 'delete',
-                                payload: {rowIdx, onDataChange}
-                            })
+                            updateData(dataMangler(data, 'delete', {rowIdx}))
                         }
                     }}>
                     {`Are you sure you want to delete "${data[rowIdx].name}"`}
@@ -86,14 +83,11 @@ function Excel({schema, initialData, onDataChange, filter}) {
                     onAction={(action) => {
                         setDialog(null)
                         if (isEdit && action === 'confirm') {
-                            dispatch({
-                                type: 'saveForm',
-                                payload: {
+                            updateData(dataMangler(data, 'saveForm', {
                                     rowIdx,
-                                    onDataChange,
                                     form
                                 }
-                            })
+                            ))
                         }
                     }} >
                     <Form
@@ -106,9 +100,9 @@ function Excel({schema, initialData, onDataChange, filter}) {
         }
     }
 
-    function reducer(data, action) {
-        if (action.type === 'sort') {
-            const {column, descending} = action.payload
+    function dataMangler(data, action, payload) {
+        if (action === 'sort') {
+            const {column, descending} = payload
             return data.sort((a, b) => {
                 if (a[column] === b[column]) {
                     return 0
@@ -118,22 +112,20 @@ function Excel({schema, initialData, onDataChange, filter}) {
                     a[column] < b[column] ? -1 : 1
             })
         }
-        if (action.type === 'save') {
-            const {int, edit} = action.payload
-            data[edit.row][edit.column] = int ? parseInt(action.payload.value, 10)
-                : action.payload.value
+        if (action === 'save') {
+            const {int, edit} = payload
+            data[edit.row][edit.column] = int ? parseInt(payload.value, 10)
+                : payload.value
         }
-        if (action.type === 'delete') {
+        if (action === 'delete') {
             data = clone(data)
-            data.splice(action.payload.rowIdx, 1)
+            data.splice(payload.rowIdx, 1)
         }
-        if (action.type === 'saveForm') {
-            Array.from(action.payload.form.current).forEach(
-                (input) => (data[action.payload.rowIdx][input.id] = input.value)
+        if (action === 'saveForm') {
+            Array.from(payload.form.current).forEach(
+                (input) => (data[payload.rowIdx][input.id] = input.value)
             )
         }
-
-        setTimeout(() => action.payload.onDataChange(data))
         return data
     }
 

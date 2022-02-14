@@ -1,51 +1,29 @@
 import Header from "./Header";
 import Body from "./Body";
 import Excel from "./Excel";
-import Dialog from "./Dialog";
-import Form from "./Form";
 import {useReducer, useRef, useState} from "react";
 import clone from "./../modules/clone"
+import schema from "../config/schema";
+import DataContext from "../modules/DataContext";
 
 function commitToStorage(data) {
     localStorage.setItem('data', JSON.stringify(data))
 }
 
-function reducer(data, action) {
-    if (action.type === 'save') {
-        data = clone(data)
-        data.unshift(action.payload.formData)
-        commitToStorage(data)
-        return data
-    }
-    if (action.type === 'excelchange') {
-        commitToStorage(action.payload.updatedData)
-        return action.payload.updatedData
-    }
+let initialData = JSON.parse(localStorage.getItem('data'))
+if (!initialData) {
+    initialData = [{}]
+    Object.keys(schema).forEach((key) => (initialData[0][key] = schema[key].samples[0]))
 }
 
-function DataFlow({schema, initialData}) {
-    const [data, dispatch] = useReducer(reducer, initialData)
-    const [addNew, setAddNew] = useState(false)
+function DataFlow() {
+    const [data, setData] = useState(initialData)
     const [filter, setFilter] = useState(null)
 
-    const form = useRef(null)
-
-    function saveNew(action) {
-        setAddNew(false)
-        if (action === 'dismiss') return
-        const formData = {}
-        Array.from(form.current).forEach((input) => formData[input.id] = input.value)
-        dispatch({
-            type: 'save',
-            payload: {formData}
-        })
-    }
-
-    function onExcelDataChange(updatedData) {
-        dispatch({
-            type: 'excelchange',
-            payload: {updatedData}
-        })
+    function updateData(newData) {
+        newData = clone(newData)
+        commitToStorage(newData)
+        setData(newData)
     }
 
     function onSearch(e) {
@@ -54,29 +32,12 @@ function DataFlow({schema, initialData}) {
 
     return (
         <div className="DataFlow">
-            <Header
-                onAdd={() => setAddNew(true)}
-                onSearch={onSearch}
-                count={data.length}
-            />
-            <Body>
-                <Excel
-                    schema={schema}
-                    initialData={data}
-                    key={data}
-                    onDataChange={(updatedData) => onExcelDataChange(updatedData)}
-                    filter={filter}
-                />
-                {addNew ? (
-                    <Dialog
-                        modal={true}
-                        header="Add new item"
-                        confirmLabel="Add"
-                        onAction={(action) => saveNew(action)}>
-                        <Form ref={form} fields={schema}/>
-                    </Dialog>
-                ) : null}
-            </Body>
+            <DataContext.Provider value={{data, updateData}}>
+                <Header onSearch={onSearch}/>
+                <Body>
+                    <Excel filter={filter}/>
+                </Body>
+            </DataContext.Provider>
         </div>
     )
 }
